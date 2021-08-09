@@ -1345,7 +1345,7 @@
       SAVE   / MOMSET /
       REAL*8 SUM(4)
 
-      DO J=1,5
+      DO J=1,4
          SUM(J)=0.
       ENDDO
       
@@ -1353,7 +1353,7 @@
 
       
       DO I=1,NPHOT
-         DO J=1,5
+         DO J=1,4
             SUM(J)= SUM(J)+ PHOT(I,J)
          ENDDO
       ENDDO

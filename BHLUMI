@@ -1,0 +1,178 @@
+#!/bin/bash
+
+# Wrapper around the BHLUMI/BHLUMI.exe executable
+
+help(){
+   echo ""
+   echo "+++ Wrapper around the BHLUMI.exe executable +++"
+   echo ""
+   echo -e "Usage: \tBHLUMI -e Ecms -n Nevts -f Thmin -t Thmax -x epscms -o output_file [-s seed_file]"
+   echo -e "       \tKKMCee -c config_file [-s seed_file]"
+   echo ""
+   echo "Switches:"
+   echo -e "  -c, --config file \t\tPath to configuration file"
+   echo -e "  -e, --ecms energy \t\tCenter of Mass energy in GeV"
+   echo -e "  -n, --nevts energy \t\tNumber of events to be generated"
+   echo -e "  -f, --Thmin theta \t\tMinimum theta [rad]"
+   echo -e "  -t, --Thmax theta \t\tMaximum theta [rad]"
+   echo -e "  -x, --epscms fraction \tEnergy cut-off in  fraction of Ecms"
+   echo -e "  -o, --outfile file \t\tFile with the generated events in LHE format"
+   echo -e "  -s, --seedfile file \t\tFile to be used for seeding (randomly generated, if missing)"
+   echo ""
+   echo "Examples:"
+   echo -e "BHLUMI -f 0.022 -t 0.082 -x 0.001 -e 91.2 -n 10000 -o kkmu_10000.LHE"
+   echo -e "BHLUMI -c bhlumi.input"
+   echo ""
+   echo "Additional switches (for experts only):"
+   echo -e "  -k, --keyopt KEYOPT \t\tTechnical parameters switch [default 3021]"
+   echo -e "  \t\t\t\tKEYOPT = 1000*KEYGEN + 100*KEYREM + 10*KEYWGT + KEYRND"
+   echo -e "  -r, --keyrad KEYRAD \t\tPhysics parameters switch [default 1021]"   
+   echo -e "  \t\t\t\tKEYRAD = 1000*KEYZET + 100*KEYUPD + 10*KEYMOD + KEYPIA"
+   echo -e "  (Contact BHLUMI authors for details, e.g. through https://github.com/KrakowHEPSoft/BHLUMI)"
+   echo ""
+}
+
+_ECMS="91.2"
+_NEVTS="100"
+_THMIN=".022768344"
+_THMAX=".082035891"
+_EPSCMS="1D-3"
+_KEYOPT="3021"
+_KEYRAD="1021"
+_OUTFILE="BHLUMI_OUT.LHE"
+# Read arguments
+while [[ $# -gt 0 ]]
+do
+    arg="$1"
+    case $arg in
+        -c | --config)
+            _CONFFILE="$2"
+            shift # past argument
+            shift # past value
+        ;;
+        -e | --ecms)
+            _ECMS="$2"
+            shift
+            shift
+        ;;
+        -f | --thmin)
+           _THMIN="$2"
+           shift
+           shift
+        ;;
+        -t | --thmax)
+           _THMAX="$2"
+           shift
+           shift
+        ;;
+        -x | --epscms)
+           _EPSCMS="$2"
+           shift
+           shift
+        ;;
+        -k | --keyopt)
+           _KEYOPT="$2"
+           shift
+           shift
+        ;;
+        -r | --keyrad)
+           _KEYRAD="$2"
+           shift
+           shift
+        ;;
+        -n | --nevts)
+           _NEVTS="$2"
+           shift
+           shift
+        ;;
+        -s | --seedfile)
+           _SEEDFILE="$2"
+           shift
+           shift
+        ;;
+        -o | --outfile)
+           _OUTFILE="$2"
+           shift
+           shift
+        ;;
+        * | -h | --help)
+            help
+            exit 1
+    esac
+done
+
+BHLUMI_DIR=$(dirname $(dirname $0))
+BHLUMI_EXE=${BHLUMI_DIR}/bin/BHLUMI.exe
+
+# Run existing config file
+BHLUMIINPUT="./bhlumi.input"
+if test -f $BHLUMIINPUT ; then
+   echo "Existing input file saved to ${BHLUMIINPUT}.last ... "
+   cp -rp $BHLUMIINPUT "${BHLUMIINPUT}.last"
+   rm -f $BHLUMIINPUT
+fi
+if test ! "x$_CONFFILE" = "x" && test -f $_CONFFILE; then
+   ln -sf ${_CONFFILE} $BHLUMIINPUT
+else
+# We create a config file based on the input switches: this is the initial common part
+cat > $BHLUMIINPUT <<EOF
++++========= Input Data set for BHLUMI ===============================
+ 0 1 0 0 0 0 0 0    KAT1,KAT2,KAT3,KAT4,KAT5,KAT6,KAT7,KAT8
+ ${_NEVTS}      NEVT
+ ${_KEYOPT}     KEYOPT = 1000*KEYGEN +100*KEYREM +10*KEYWGT +KEYRND
+ ${_KEYRAD}     KEYRAD =              100*KEYUPD +10*KEYMOD +KEYPIA
+         2      KEYTRI  Obsolete!!!
+ ${_ECMS}D0     CMSENE
+ ${_THMIN}      Tming   theta_min [rad]    genaration
+ ${_THMAX}      Tmaxg   theta_max [rad]    generation
+  0.9999D0      VMAXG   v_max              generation
+ ${_EPSCMS}      XK0     eps_CMS            generation
+      .024      TminW   theta_min sical    trigger wide
+      .058      TmaxW   theta_max sical    trigger wide
+      .024      TminN   theta_min          trigger narrow
+      .058      TminN   theta_max          trigger narrow
+     0.5D0      VMAXE   v_max              trigger maximum v
+        32      NPHI    nphi      sical    trigger no of phi   sect.
+        16      NTHE    ntheta    sical    trigger no of theta sect.
+================= the end of input data set for BHLUMI ================
+EOF
+fi
+
+# Create seed file
+if test ! "x$_SEEDFILE" = "x" && test -f $_SEEDFILE; then
+   ln -sf $_SEEDFILE ./iniseed
+else
+   _seed=`date +"%j%H%M%N"`
+   _seed1=`echo ${_seed:0:8}`
+   _seed2=`echo ${_seed:8:15}`
+   echo "Seeds: $_seed1 $_seed2"
+   cat > ./iniseed <<EOF
+  $_seed1      IJKLIN= $_seed2
+         0      NTOTIN= 0
+         0      NTOT2N= 0
+EOF
+fi
+cat ./iniseed
+
+# Run
+cat > ./semaphore <<EOF
+START
+
+EOF
+
+# Save existing output file
+DEFOUTFILE="out.lhe"
+if test -f $DEFOUTFILE ; then
+   echo "Existing LHE output file saved to ${DEFOUTFILE}.last ... "
+   mv $DEFOUTFILE "${DEFOUTFILE}.last"
+fi
+
+time ${BHLUMI_EXE} < $BHLUMIINPUT
+
+# Set output file
+if test -f $DEFOUTFILE ; then
+   mv $DEFOUTFILE ${_OUTFILE}
+else
+   echo "==== LHE output file $DEFOUTFILE was not produced!"
+fi
+

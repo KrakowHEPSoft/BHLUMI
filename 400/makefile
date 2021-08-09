@@ -10,7 +10,7 @@ F77 = gfortran
 LD = $(F77)
 AR = ar
 RANLIB = ranlib
-FFLAGS  =  -fno-automatic -ffixed-line-length-132 -fbackslash -C -O
+FFLAGS  =  -g -fno-automatic -ffixed-line-length-132 -fbackslash -C -O2
 ########### collection of ibm  flags ###########
 #FFLAGS  =  -O   -C -qextchk  -bloadmap:lmap
 #FFLAGS  =  -C -qextchk -qinitauto=FF -bloadmap:lmap -qflttrap=overflow:underflow:zerodivide:invalid:enable

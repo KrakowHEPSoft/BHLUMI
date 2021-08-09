@@ -44,8 +44,8 @@
 #
 #	For more see figs/makefile
 ###########################################################################
-FFLAGS  =  -fno-automatic -ffixed-line-length-132 -fbackslash -C -O
-LDFLAGS = 
+FFLAGS  = -g -fno-automatic -ffixed-line-length-132 -fbackslash -C -O2
+LDFLAGS = -g -O2
 F77 = gfortran
 LD  = $(F77)
 #-----------------------------------------------------------------------
@@ -78,6 +78,7 @@ $(COMMAND2): $(OBJECTS2)                   $(EXTER_LIB1) $(EXTER_LIB2)
 demo: $(COMMAND)
 	(cd demo;   time ../demo.exe )
 	(cd demo;   latex demo.tex;  xdvi demo; dvips demo.dvi -o )
+lhemain: $(COMMAND2)
 demo-diff-rs:
 	(cd demo; diff demo.output.100k.keypia.eq.2.keywgt.eq.0.rs demo.output)
 	(cd demo; diff demo.tex.100k.keypia.eq.2.keywgt.eq.0.rs    demo.tex)
@@ -250,4 +251,4 @@ EXPORT:
 #### tags: v404a (12sept), v404b (13sept) v404c (16sept) v404d (17sept)
 #### tags: v404e (18sept), v404f (20sept) v404g (20sept) v404h (20sept)
 #### tags: v404i (20sept), v404j (21sept) v404k (21sept) v404l (23sept) 
-#### tags: v404m (25sept) 
+#### tags: v404m (25sept)

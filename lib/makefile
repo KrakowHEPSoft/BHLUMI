@@ -14,7 +14,7 @@ F77 = gfortran
 #FFLAGS  = -C -qextchk -qinitauto=FF  -bloadmap:lmap -qflttrap=overflow:underflow:zerodivide:invalid:enable
 ###############################################
 # actual flags
-FFLAGS  =  -fno-automatic -ffixed-line-length-132 -fbackslash -C -O
+FFLAGS  =  -g -fno-automatic -ffixed-line-length-132 -fbackslash -C -O2
 ##############################################################################
 .f.o:
 	$(F77) $(FFLAGS) -c $<
